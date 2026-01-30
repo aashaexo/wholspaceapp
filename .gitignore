@@ -1,0 +1,19 @@
+# Dependencies
+node_modules/
+
+# Local env (keep keys out of git)
+.env.local
+.env*.local
+
+# Build
+dist/
+.vite/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Editor
+.DS_Store
+.idea/
+.vscode/

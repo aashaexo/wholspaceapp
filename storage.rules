@@ -1,0 +1,63 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // Helper function to check authentication
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Helper function to check file size (in bytes)
+    function isValidSize(maxSizeInMB) {
+      return request.resource.size < maxSizeInMB * 1024 * 1024;
+    }
+    
+    // Helper function to check if file is an image
+    function isImage() {
+      return request.resource.contentType.matches('image/.*');
+    }
+    
+    // ==========================================
+    // AVATAR IMAGES
+    // ==========================================
+    match /avatars/{userId}/{fileName} {
+      // Anyone can read avatars
+      allow read: if true;
+      
+      // Only the owner can upload/update their avatar
+      allow write: if isAuthenticated() 
+        && request.auth.uid == userId
+        && isImage()
+        && isValidSize(5); // 5MB max
+      
+      // Only the owner can delete their avatar
+      allow delete: if isAuthenticated() 
+        && request.auth.uid == userId;
+    }
+    
+    // ==========================================
+    // PROJECT IMAGES
+    // ==========================================
+    match /projects/{userId}/{projectId}/{fileName} {
+      // Anyone can read project images
+      allow read: if true;
+      
+      // Only the owner can upload project images
+      allow write: if isAuthenticated() 
+        && request.auth.uid == userId
+        && isImage()
+        && isValidSize(10); // 10MB max
+      
+      // Only the owner can delete project images
+      allow delete: if isAuthenticated() 
+        && request.auth.uid == userId;
+    }
+    
+    // ==========================================
+    // DENY ALL OTHER PATHS
+    // ==========================================
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -1,0 +1,114 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Helper function to check if user owns the resource
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // ==========================================
+    // USERS COLLECTION
+    // ==========================================
+    match /users/{userId} {
+      // Anyone can read user profiles
+      allow read: if true;
+      
+      // Users can only create their own profile
+      allow create: if isOwner(userId);
+      
+      // Users can only update their own profile
+      // But anyone can update followerCount/followingCount
+      allow update: if isOwner(userId) || 
+        (isAuthenticated() && 
+         request.resource.data.diff(resource.data).affectedKeys()
+           .hasOnly(['followerCount', 'followingCount']));
+      
+      // No deletion allowed
+      allow delete: if false;
+    }
+    
+    // ==========================================
+    // PROJECTS COLLECTION
+    // ==========================================
+    match /projects/{projectId} {
+      // Anyone can read projects
+      allow read: if true;
+      
+      // Authenticated users can create projects
+      allow create: if isAuthenticated() && 
+        request.resource.data.userId == request.auth.uid;
+      
+      // Project owner can update all fields
+      // Other users can only update likes, likedBy, views
+      allow update: if isAuthenticated() && (
+        resource.data.userId == request.auth.uid ||
+        request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['likes', 'likedBy', 'views'])
+      );
+      
+      // Only project owner can delete
+      allow delete: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid;
+    }
+    
+    // ==========================================
+    // FOLLOWS COLLECTION
+    // ==========================================
+    match /follows/{followId} {
+      // Anyone can read follow relationships
+      allow read: if true;
+      
+      // Authenticated users can create follows
+      // Must be the follower creating the relationship
+      allow create: if isAuthenticated() && 
+        request.resource.data.followerId == request.auth.uid;
+      
+      // Only the follower can delete (unfollow)
+      allow delete: if isAuthenticated() && 
+        resource.data.followerId == request.auth.uid;
+      
+      // No updates allowed
+      allow update: if false;
+    }
+    
+    // ==========================================
+    // COMMENTS COLLECTION (Future)
+    // ==========================================
+    match /comments/{commentId} {
+      allow read: if true;
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid;
+      allow delete: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid;
+    }
+    
+    // ==========================================
+    // NOTIFICATIONS COLLECTION (Future)
+    // ==========================================
+    match /notifications/{notificationId} {
+      // Users can only read their own notifications
+      allow read: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid;
+      
+      // System creates notifications
+      allow create: if isAuthenticated();
+      
+      // Users can mark their notifications as read
+      allow update: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid &&
+        request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['read', 'readAt']);
+      
+      // Users can delete their own notifications
+      allow delete: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid;
+    }
+  }
+}
