@@ -52,7 +52,7 @@ Go to Firebase Console → Firestore → Indexes and create:
 
 | Collection | Fields | Query Scope |
 |------------|--------|-------------|
-| users | isProfileComplete (Asc), projectCount (Desc) | Collection |
+| users | isProfileComplete (Asc), createdAt (Desc) | Collection |
 | users | isFeatured (Asc), isProfileComplete (Asc) | Collection |
 | projects | userId (Asc), createdAt (Desc) | Collection |
 | projects | isPublished (Asc), createdAt (Desc) | Collection |

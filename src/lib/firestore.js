@@ -99,7 +99,8 @@ export const isHandleAvailable = async (handle) => {
  */
 export const updateUserProfile = async (userId, data) => {
   const userRef = doc(db, 'users', userId);
-  
+  const existing = await getDoc(userRef);
+
   // If updating handle, convert to lowercase
   const payload = { ...data };
   if (payload.handle) {
@@ -107,10 +108,12 @@ export const updateUserProfile = async (userId, data) => {
   }
   payload.updatedAt = serverTimestamp();
   payload.uid = userId;
+  // Set createdAt on first create so profile can appear in Featured Builders (ordered by createdAt)
+  if (!existing.exists()) {
+    payload.createdAt = serverTimestamp();
+  }
 
-  // Use setDoc with merge so first save creates the doc; later saves update it
   await setDoc(userRef, payload, { merge: true });
-  
   return await getUserById(userId);
 };
 
@@ -131,30 +134,17 @@ export const completeUserProfile = async (userId, profileData) => {
 };
 
 /**
- * Get featured builders
+ * Get featured builders (includes new builders who created their profile)
  */
 export const getFeaturedVibecoders = async (limitCount = 6) => {
-  // First try to get manually featured users
-  let q = query(
+  // Get profile-complete users (have username), newest first so new builders appear
+  const q = query(
     collection(db, 'users'),
-    where('isFeatured', '==', true),
     where('isProfileComplete', '==', true),
+    orderBy('createdAt', 'desc'),
     limit(limitCount)
   );
-  
-  let querySnap = await getDocs(q);
-  
-  // If not enough featured, get top users by project count
-  if (querySnap.size < limitCount) {
-    q = query(
-      collection(db, 'users'),
-      where('isProfileComplete', '==', true),
-      orderBy('projectCount', 'desc'),
-      limit(limitCount)
-    );
-    querySnap = await getDocs(q);
-  }
-  
+  const querySnap = await getDocs(q);
   return querySnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 };
 

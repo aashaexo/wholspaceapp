@@ -97,11 +97,18 @@ export default function MyProfile({ onBack }) {
     setIsLoading(true);
 
     try {
+      // Username (handle) is required
+      const handleTrimmed = (formData.handle || '').trim();
+      if (!handleTrimmed) {
+        setError('Username is required');
+        setIsLoading(false);
+        return;
+      }
       // Validate handle if changed
-      if (formData.handle && formData.handle !== userProfile?.handle) {
-        const handleAvailable = await isHandleAvailable(formData.handle);
+      if (handleTrimmed !== (userProfile?.handle || '')) {
+        const handleAvailable = await isHandleAvailable(handleTrimmed);
         if (!handleAvailable) {
-          setError('This handle is already taken');
+          setError('This username is already taken');
           setIsLoading(false);
           return;
         }
@@ -117,7 +124,7 @@ export default function MyProfile({ onBack }) {
       await updateUserProfile(user.uid, {
         ...formData,
         photoURL,
-        isProfileComplete: !!(formData.displayName && formData.handle)
+        isProfileComplete: !!handleTrimmed
       });
 
       await refreshProfile();
@@ -127,7 +134,12 @@ export default function MyProfile({ onBack }) {
       setAvatarPreview(null);
     } catch (err) {
       console.error('Error updating profile:', err);
-      setError(err.message || 'Failed to update profile');
+      const msg = err.message || '';
+      if (msg.includes('permission') || msg.includes('Permission')) {
+        setError('Profile save was blocked. In Firebase Console → Firestore → Rules, paste your firestore.rules and click Publish. Then try again.');
+      } else {
+        setError(msg || 'Failed to update profile');
+      }
     }
 
     setIsLoading(false);
@@ -283,7 +295,7 @@ export default function MyProfile({ onBack }) {
             </div>
 
             <div style={styles.inputGroup}>
-              <label style={styles.label}>Handle / Username</label>
+              <label style={styles.label}>Handle / Username *</label>
               {isEditing ? (
                 <div style={styles.handleInput}>
                   <span style={styles.handlePrefix}>@</span>
