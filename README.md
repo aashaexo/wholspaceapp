@@ -61,7 +61,17 @@ Go to Firebase Console → Firestore → Indexes and create:
 | follows | followingId (Asc), createdAt (Desc) | Collection |
 | follows | followerId (Asc), createdAt (Desc) | Collection |
 
-### 5. Run the App
+### 5. Deploy Firestore & Storage Rules (required)
+
+If you see **"Missing or insufficient permissions"** when saving a profile or creating a project:
+
+1. Open [Firebase Console](https://console.firebase.google.com) → your project → **Firestore Database** → **Rules**.
+2. Replace the rules with the contents of `firestore.rules` from this repo, then click **Publish**.
+3. Do the same for **Storage** → **Rules** using `storage.rules`.
+
+Until these rules are published, writes will be denied.
+
+### 6. Run the App
 
 ```bash
 npm run dev

@@ -56,17 +56,12 @@ export default function AddProjectModal({ onClose, onProjectAdded }) {
     setError('');
     
     if (!formData.title.trim()) {
-      setError('Project title is required');
+      setError('Project name is required');
       return;
     }
     
-    if (!formData.tool) {
-      setError('Please select a tool');
-      return;
-    }
-    
-    if (!formData.category) {
-      setError('Please select a category');
+    if (!formData.demoUrl.trim()) {
+      setError('Demo URL is required');
       return;
     }
 
@@ -174,7 +169,7 @@ export default function AddProjectModal({ onClose, onProjectAdded }) {
 
           {/* Title */}
           <div style={styles.inputGroup}>
-            <label style={styles.label}>Project Title *</label>
+            <label style={styles.label}>Project Name *</label>
             <input
               type="text"
               name="title"
@@ -216,13 +211,12 @@ export default function AddProjectModal({ onClose, onProjectAdded }) {
           {/* Tool & Category Row */}
           <div style={styles.row}>
             <div style={styles.inputGroup}>
-              <label style={styles.label}>Built With *</label>
+              <label style={styles.label}>Built With</label>
               <select
                 name="tool"
                 value={formData.tool}
                 onChange={handleChange}
                 style={styles.select}
-                required
               >
                 <option value="">Select tool...</option>
                 {TOOLS.map(tool => (
@@ -232,13 +226,12 @@ export default function AddProjectModal({ onClose, onProjectAdded }) {
             </div>
 
             <div style={styles.inputGroup}>
-              <label style={styles.label}>Category *</label>
+              <label style={styles.label}>Category</label>
               <select
                 name="category"
                 value={formData.category}
                 onChange={handleChange}
                 style={styles.select}
-                required
               >
                 <option value="">Select category...</option>
                 {CATEGORIES.map(cat => (
@@ -251,7 +244,7 @@ export default function AddProjectModal({ onClose, onProjectAdded }) {
           {/* URLs Row */}
           <div style={styles.row}>
             <div style={styles.inputGroup}>
-              <label style={styles.label}>Demo URL</label>
+              <label style={styles.label}>Demo URL *</label>
               <input
                 type="url"
                 name="demoUrl"
@@ -259,6 +252,7 @@ export default function AddProjectModal({ onClose, onProjectAdded }) {
                 onChange={handleChange}
                 placeholder="https://myproject.com"
                 style={styles.input}
+                required
               />
             </div>
 

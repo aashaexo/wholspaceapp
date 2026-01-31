@@ -95,20 +95,21 @@ export const isHandleAvailable = async (handle) => {
 };
 
 /**
- * Update user profile
+ * Update user profile (creates the document if it doesn't exist yet)
  */
 export const updateUserProfile = async (userId, data) => {
   const userRef = doc(db, 'users', userId);
   
   // If updating handle, convert to lowercase
-  if (data.handle) {
-    data.handle = data.handle.toLowerCase();
+  const payload = { ...data };
+  if (payload.handle) {
+    payload.handle = payload.handle.toLowerCase();
   }
-  
-  await updateDoc(userRef, {
-    ...data,
-    updatedAt: serverTimestamp()
-  });
+  payload.updatedAt = serverTimestamp();
+  payload.uid = userId;
+
+  // Use setDoc with merge so first save creates the doc; later saves update it
+  await setDoc(userRef, payload, { merge: true });
   
   return await getUserById(userId);
 };
