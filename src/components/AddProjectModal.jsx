@@ -65,6 +65,14 @@ export default function AddProjectModal({ onClose, onProjectAdded }) {
       return;
     }
 
+    // Normalize URLs: add https:// if no protocol (so "example.com" works)
+    const normalizeUrl = (url) => {
+      const u = url.trim();
+      if (!u) return '';
+      if (/^https?:\/\//i.test(u)) return u;
+      return `https://${u}`;
+    };
+
     setIsLoading(true);
     setUploadProgress(10);
     
@@ -74,8 +82,8 @@ export default function AddProjectModal({ onClose, onProjectAdded }) {
         title: formData.title.trim(),
         shortDescription: formData.shortDescription.trim(),
         description: formData.description.trim(),
-        demoUrl: formData.demoUrl.trim(),
-        githubUrl: formData.githubUrl.trim(),
+        demoUrl: normalizeUrl(formData.demoUrl),
+        githubUrl: normalizeUrl(formData.githubUrl),
         tool: formData.tool,
         category: formData.category,
         tags: formData.tags.split(',').map(t => t.trim()).filter(Boolean),
@@ -246,11 +254,11 @@ export default function AddProjectModal({ onClose, onProjectAdded }) {
             <div style={styles.inputGroup}>
               <label style={styles.label}>Demo URL *</label>
               <input
-                type="url"
+                type="text"
                 name="demoUrl"
                 value={formData.demoUrl}
                 onChange={handleChange}
-                placeholder="https://myproject.com"
+                placeholder="myproject.com or https://myproject.com"
                 style={styles.input}
                 required
               />
@@ -259,11 +267,11 @@ export default function AddProjectModal({ onClose, onProjectAdded }) {
             <div style={styles.inputGroup}>
               <label style={styles.label}>GitHub URL</label>
               <input
-                type="url"
+                type="text"
                 name="githubUrl"
                 value={formData.githubUrl}
                 onChange={handleChange}
-                placeholder="https://github.com/user/repo"
+                placeholder="github.com/user/repo or full URL"
                 style={styles.input}
               />
             </div>

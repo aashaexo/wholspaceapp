@@ -424,6 +424,7 @@ function UserMenu({ onLogout, onNavigate }) {
 function MarketplaceContent() {
   const { user, loading, logout, pendingVerification, clearPendingVerification } = useAuth();
   const [showAuth, setShowAuth] = useState(false);
+  const [showUnderConstruction, setShowUnderConstruction] = useState(false);
   const [currentPage, setCurrentPage] = useState('home'); // 'home' | 'projects' | 'profile' | 'settings'
   const [activeCategory, setActiveCategory] = useState('All');
   const [searchFocused, setSearchFocused] = useState(false);
@@ -782,7 +783,7 @@ function MarketplaceContent() {
           <p style={styles.ctaSubtitle}>
             Join thousands of builders shipping incredible projects with AI.
           </p>
-          <button style={styles.ctaButton} onClick={() => setShowAuth(true)}>
+          <button style={styles.ctaButton} onClick={() => setShowUnderConstruction(true)}>
             Start vibecoding now
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ marginLeft: 10 }}>
               <path d="M5 12h14M12 5l7 7-7 7"/>
@@ -810,6 +811,19 @@ function MarketplaceContent() {
 
       {/* Auth Modal */}
       {showAuth && <AuthModal onClose={() => setShowAuth(false)} />}
+
+      {/* Under construction overlay (white page) */}
+      {showUnderConstruction && (
+        <div style={underConstructionStyles.overlay}>
+          <div style={underConstructionStyles.content}>
+            <h1 style={underConstructionStyles.title}>Under construction</h1>
+            <p style={underConstructionStyles.subtitle}>We're building something great. Check back soon.</p>
+            <button style={underConstructionStyles.backBtn} onClick={() => setShowUnderConstruction(false)}>
+              Back
+            </button>
+          </div>
+        </div>
+      )}
 
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap');
@@ -1218,6 +1232,49 @@ const userMenuStyles = {
     borderRadius: 8,
     fontFamily: 'inherit',
     textAlign: 'left',
+  },
+};
+
+const underConstructionStyles = {
+  overlay: {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: '#ffffff',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 9999,
+    fontFamily: '"Outfit", sans-serif',
+  },
+  content: {
+    textAlign: 'center',
+    maxWidth: 400,
+  },
+  title: {
+    fontSize: 32,
+    fontWeight: 700,
+    color: '#111',
+    marginBottom: 12,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: '#555',
+    marginBottom: 24,
+    lineHeight: 1.5,
+  },
+  backBtn: {
+    padding: '12px 24px',
+    fontSize: 15,
+    fontWeight: 600,
+    color: '#fff',
+    backgroundColor: '#3B82F6',
+    border: 'none',
+    borderRadius: 10,
+    cursor: 'pointer',
+    fontFamily: 'inherit',
   },
 };
 
