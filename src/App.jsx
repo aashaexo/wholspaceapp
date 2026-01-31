@@ -432,6 +432,8 @@ function MarketplaceContent() {
   
   // Data states
   const [vibecoders, setVibecoders] = useState([]);
+  const [exploreBuilders, setExploreBuilders] = useState([]);
+  const [exploreLoading, setExploreLoading] = useState(false);
   const [projects, setProjects] = useState([]);
   const [stats, setStats] = useState({ totalUsers: 0, totalProjects: 0 });
   const [dataLoading, setDataLoading] = useState(true);
@@ -463,6 +465,16 @@ function MarketplaceContent() {
 
     fetchData();
   }, []);
+
+  // Fetch all builders when opening Explore
+  useEffect(() => {
+    if (currentPage !== 'explore') return;
+    setExploreLoading(true);
+    getFeaturedVibecoders(100)
+      .then(setExploreBuilders)
+      .catch((err) => console.error('Error fetching builders:', err))
+      .finally(() => setExploreLoading(false));
+  }, [currentPage]);
 
   const handleLogout = async () => {
     await logout();
@@ -504,6 +516,61 @@ function MarketplaceContent() {
     return <MyProfile onBack={() => setCurrentPage('home')} />;
   }
 
+  // Explore page: all builders (profile picture + name cards)
+  if (currentPage === 'explore') {
+    return (
+      <div style={styles.container}>
+        <div style={styles.gridOverlay} />
+        <nav style={{ ...styles.nav, backgroundColor: 'rgba(10, 10, 10, 0.95)', backdropFilter: 'blur(20px)' }}>
+          <div style={styles.navContent}>
+            <div style={styles.logo} onClick={() => setCurrentPage('home')} role="button">
+              <img src="/logo.png" alt="Wholspace" style={styles.logoImg} />
+              <span style={styles.logoText}>wholspace</span>
+            </div>
+            <div style={styles.navLinks}>
+              <a href="#" style={{ ...styles.navLink, color: '#fff' }} onClick={(e) => { e.preventDefault(); setCurrentPage('explore'); }}>Explore</a>
+              <a href="#" style={styles.navLink} onClick={(e) => { e.preventDefault(); setCurrentPage('home'); }}>Builders</a>
+              <a href="#" style={styles.navLink}>Tools</a>
+              <a href="#" style={styles.navLink}>Resources</a>
+            </div>
+            <div style={styles.navActions}>
+              {user ? <UserMenu onLogout={handleLogout} onNavigate={handleNavigate} /> : (
+                <>
+                  <button style={styles.loginBtn} onClick={() => setShowAuth(true)}>Log in</button>
+                  <button style={styles.signupBtn} onClick={() => setShowAuth(true)}>Sign up</button>
+                </>
+              )}
+            </div>
+          </div>
+        </nav>
+        <main style={styles.exploreMain}>
+          <button style={styles.backBtn} onClick={() => setCurrentPage('home')}>← Back</button>
+          <h1 style={styles.exploreTitle}>Explore Builders</h1>
+          <p style={styles.exploreSubtitle}>Everyone who created their profile</p>
+          {exploreLoading ? (
+            <p style={{ color: '#666', marginTop: 24 }}>Loading builders...</p>
+          ) : (
+            <div style={styles.builderCardsGrid}>
+              {exploreBuilders.map((builder) => (
+                <div key={builder.id} style={styles.builderCardMinimal}>
+                  <div style={styles.builderCardPhoto}>
+                    {builder.photoURL ? (
+                      <img src={builder.photoURL} alt="" style={styles.builderCardPhotoImg} />
+                    ) : (
+                      <span style={styles.builderCardPhotoLetter}>{builder.displayName?.[0] || '?'}</span>
+                    )}
+                  </div>
+                  <div style={styles.builderCardName}>{builder.displayName || 'Builder'}</div>
+                </div>
+              ))}
+            </div>
+          )}
+        </main>
+        {showAuth && <AuthModal onClose={() => setShowAuth(false)} />}
+      </div>
+    );
+  }
+
   return (
     <div style={styles.container}>
       {/* Grid overlay */}
@@ -522,7 +589,7 @@ function MarketplaceContent() {
           </div>
           
           <div style={styles.navLinks}>
-            <a href="#" style={styles.navLink}>Explore</a>
+            <a href="#" style={styles.navLink} onClick={(e) => { e.preventDefault(); setCurrentPage('explore'); }}>Explore</a>
             <a href="#" style={styles.navLink}>Builders</a>
             <a href="#" style={styles.navLink}>Tools</a>
             <a href="#" style={styles.navLink}>Resources</a>
@@ -624,14 +691,14 @@ function MarketplaceContent() {
         </div>
       </section>
 
-      {/* Featured Vibecoders */}
+      {/* Featured Builders - profile picture + name only */}
       <section style={styles.section}>
         <div style={styles.sectionHeader}>
           <div>
             <h2 style={styles.sectionTitle}>Featured Builders</h2>
-            <p style={styles.sectionSubtitle}>Top builders shipping incredible projects</p>
+            <p style={styles.sectionSubtitle}>Everyone who created their profile</p>
           </div>
-          <a href="#" style={styles.viewAllLink}>
+          <a href="#" style={styles.viewAllLink} onClick={(e) => { e.preventDefault(); setCurrentPage('explore'); }}>
             View all
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M5 12h14M12 5l7 7-7 7"/>
@@ -639,32 +706,20 @@ function MarketplaceContent() {
           </a>
         </div>
 
-        <div style={styles.vibecodersGrid}>
+        <div style={styles.builderCardsGrid}>
           {dataLoading ? (
             <p style={{ color: '#666' }}>Loading builders...</p>
           ) : vibecoders.length > 0 ? (
-            vibecoders.map((coder) => (
-              <div key={coder.id} style={styles.vibecoderCard}>
-                <div style={styles.vibecoderHeader}>
-                  {coder.photoURL ? (
-                    <img src={coder.photoURL} alt="" style={styles.avatarImg} />
+            vibecoders.map((builder) => (
+              <div key={builder.id} style={styles.builderCardMinimal}>
+                <div style={styles.builderCardPhoto}>
+                  {builder.photoURL ? (
+                    <img src={builder.photoURL} alt="" style={styles.builderCardPhotoImg} />
                   ) : (
-                    <div style={styles.avatar}>
-                      {coder.displayName?.[0] || '?'}
-                    </div>
+                    <span style={styles.builderCardPhotoLetter}>{builder.displayName?.[0] || '?'}</span>
                   )}
-                  <div style={styles.vibecoderInfo}>
-                    <h3 style={styles.vibecoderName}>{coder.displayName}</h3>
-                    <span style={styles.vibecoderHandle}>@{coder.handle || 'builder'}</span>
-                  </div>
-                  <button style={styles.followBtn}>Follow</button>
                 </div>
-                
-                <p style={styles.vibecoderTagline}>{coder.tagline || coder.bio || 'Building something awesome'}</p>
-                
-                <div style={styles.vibecoderMeta}>
-                  <span style={styles.projectCount}>{coder.projectCount || 0} projects</span>
-                </div>
+                <div style={styles.builderCardName}>{builder.displayName || 'Builder'}</div>
               </div>
             ))
           ) : (
@@ -1562,6 +1617,69 @@ const styles = {
     textDecoration: 'none',
     fontSize: 14,
     fontWeight: 500,
+  },
+  builderCardsGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+    gap: 24,
+  },
+  builderCardMinimal: {
+    background: '#111',
+    border: '1px solid #333',
+    borderRadius: 16,
+    overflow: 'hidden',
+    transition: 'border-color 0.2s ease',
+  },
+  builderCardPhoto: {
+    width: '100%',
+    aspectRatio: '1',
+    background: '#0a0a0a',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  builderCardPhotoImg: {
+    width: '100%',
+    height: '100%',
+    objectFit: 'cover',
+  },
+  builderCardPhotoLetter: {
+    fontSize: 48,
+    fontWeight: 600,
+    color: '#333',
+  },
+  builderCardName: {
+    padding: '16px',
+    fontSize: 16,
+    fontWeight: 600,
+    color: '#fff',
+    fontFamily: 'inherit',
+  },
+  exploreMain: {
+    padding: '100px 24px 80px',
+    maxWidth: 1200,
+    margin: '0 auto',
+  },
+  backBtn: {
+    background: 'transparent',
+    border: 'none',
+    color: '#888',
+    fontSize: 14,
+    cursor: 'pointer',
+    marginBottom: 24,
+    fontFamily: 'inherit',
+  },
+  exploreTitle: {
+    fontSize: 36,
+    fontWeight: 700,
+    color: '#fff',
+    marginBottom: 8,
+    fontFamily: '"Space Grotesk", sans-serif',
+  },
+  exploreSubtitle: {
+    fontSize: 18,
+    color: '#666',
+    marginBottom: 32,
   },
   vibecodersGrid: {
     display: 'grid',
